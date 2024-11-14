@@ -4,6 +4,7 @@ import { useSession } from "@/app/(main)/SessionProvider";
 import LoadingButton from "@/components/LoadingButton";
 import { Button } from "@/components/ui/button";
 import UserAvatar from "@/components/UserAvatar";
+import PostIcon from "../../ui/PostIcon";
 import { cn } from "@/lib/utils";
 import Placeholder from "@tiptap/extension-placeholder";
 import { EditorContent, useEditor } from "@tiptap/react";
@@ -91,7 +92,7 @@ export default function PostEditor() {
           {/* Tags Input */}
           <div>
             <label htmlFor="tags" className="text-sm font-medium">
-              Enter Tags:
+            <span role="img" aria-label="tags">🏷️ Add a few tags: 🏷️</span>
             </label>
             <input
               type="text"
@@ -106,7 +107,7 @@ export default function PostEditor() {
           {/* Post Content Editor */}
           <div {...rootProps} className="w-full">
             <label htmlFor="postContent" className="text-sm font-medium">
-              Write your post:
+            <span role="img" aria-label="writing">✍️ Write your heart out ^^ ✨</span>
             </label>
             <EditorContent
               editor={editor}
@@ -142,9 +143,9 @@ export default function PostEditor() {
           onClick={onSubmit}
           loading={mutation.isPending}
           disabled={!input.trim() || isUploading}
-          className="min-w-20"
+          className="min-w-2"
         >
-          Post
+          <PostIcon />
         </LoadingButton>
       </div>
     </div>
