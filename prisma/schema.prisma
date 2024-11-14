@@ -68,23 +68,34 @@ model Post {
   bookmarks           Bookmark[]
   comments            Comment[]
   linkedNotifications Notification[]
+  tags                Tag[]          @relation("PostTags") // Add this line for the relation
+
 
   createdAt DateTime @default(now())
 
   @@map("posts")
 }
 
-model Media {
-  id     String    @id @default(cuid())
-  postId String?
-  post   Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
-  type   MediaType
-  url    String
+model Tag {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  posts   Post[]   @relation("PostTags")
 
-  createdAt DateTime @default(now())
-
-  @@map("post_media")
+  @@map("tags")
 }
+
+
+  model Media {
+    id     String    @id @default(cuid())
+    postId String?
+    post   Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
+    type   MediaType
+    url    String
+
+    createdAt DateTime @default(now())
+
+    @@map("post_media")
+  }
 
 enum MediaType {
   IMAGE
@@ -92,7 +103,7 @@ enum MediaType {
 }
 
 model Comment {
-  id      String @id @default(cuid())
+  id      String @id @default(cuid()) 
   content String
   userId  String
   user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -148,3 +159,5 @@ enum NotificationType {
   FOLLOW
   COMMENT
 }
+
+

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 export function getUserDataSelect(loggedInUserId: string) {
   return {
@@ -29,6 +29,55 @@ export type UserData = Prisma.UserGetPayload<{
   select: ReturnType<typeof getUserDataSelect>;
 }>;
 
+const prisma = new PrismaClient();
+
+export async function getPostsByTag(tagId: string) {
+  const posts = await prisma.post.findMany({
+    where: {
+      tags: {
+        some: {
+          id: tagId, // Filter by tag ID
+        },
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+          bio: true,
+        },
+      },
+      tags: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      _count: {
+        select: {
+          likes: true,
+          comments: true,
+        },
+      },
+    },
+  });
+
+  return posts;
+}
+
+export type TagData = Prisma.TagGetPayload<{
+  include: {
+    posts: {
+      include: ReturnType<typeof getPostDataInclude>; // Include related post data
+    };
+  };
+}>;
+
+
+
 export function getPostDataInclude(loggedInUserId: string) {
   return {
     user: {
@@ -51,6 +100,12 @@ export function getPostDataInclude(loggedInUserId: string) {
         userId: true,
       },
     },
+    tags: { // Add this line to include tags
+      select: {
+        id: true, // Select the fields you need from the Tag model
+        name: true,
+      },
+    },
     _count: {
       select: {
         likes: true,
@@ -59,6 +114,7 @@ export function getPostDataInclude(loggedInUserId: string) {
     },
   } satisfies Prisma.PostInclude;
 }
+
 
 export type PostData = Prisma.PostGetPayload<{
   include: ReturnType<typeof getPostDataInclude>;

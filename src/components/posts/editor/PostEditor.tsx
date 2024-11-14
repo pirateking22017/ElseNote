@@ -11,7 +11,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useDropzone } from "@uploadthing/react";
 import { ImageIcon, Loader2, X } from "lucide-react";
 import Image from "next/image";
-import { ClipboardEvent, useRef } from "react";
+import { ClipboardEvent, useRef, useState } from "react";
 import { useSubmitPostMutation } from "./mutations";
 import "./styles.css";
 import useMediaUpload, { Attachment } from "./useMediaUpload";
@@ -53,15 +53,24 @@ export default function PostEditor() {
       blockSeparator: "\n",
     }) || "";
 
+  const [tagInput, setTagInput] = useState("");
+
+  const tagsArray =
+    tagInput
+      .match(/#(\w+)/g) // Match words prefixed with '#' and capture the word
+      ?.map((tag) => tag.substring(1)) || []; // Remove the '#' character // Fallback to an empty array if no matches
+
   function onSubmit() {
     mutation.mutate(
       {
         content: input,
         mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
+        tagIds: tagsArray,
       },
       {
         onSuccess: () => {
           editor?.commands.clearContent();
+          setTagInput("");
           resetMediaUploads();
         },
       },
@@ -78,19 +87,40 @@ export default function PostEditor() {
   return (
     <div className="flex flex-col gap-5 rounded-2xl bg-card p-5 shadow-sm">
       <div className="flex gap-5">
-        <UserAvatar avatarUrl={user.avatarUrl} className="hidden sm:inline" />
-        <div {...rootProps} className="w-full">
-          <EditorContent
-            editor={editor}
-            className={cn(
-              "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
-              isDragActive && "outline-dashed",
-            )}
-            onPaste={onPaste}
-          />
-          <input {...getInputProps()} />
+        <div className="flex w-full flex-col">
+          {/* Tags Input */}
+          <div>
+            <label htmlFor="tags" className="text-sm font-medium">
+              Enter Tags:
+            </label>
+            <input
+              type="text"
+              id="tags"
+              value={tagInput}
+              placeholder="Add tags (e.g., #tag1 #tag2)"
+              onChange={(e) => setTagInput(e.target.value)}
+              className="mb-4 w-full rounded-2xl bg-background px-5 py-2"
+            />
+          </div>
+
+          {/* Post Content Editor */}
+          <div {...rootProps} className="w-full">
+            <label htmlFor="postContent" className="text-sm font-medium">
+              Write your post:
+            </label>
+            <EditorContent
+              editor={editor}
+              className={cn(
+                "max-h-[20rem] w-full overflow-y-auto rounded-2xl bg-background px-5 py-3",
+                isDragActive && "outline-dashed",
+              )}
+              onPaste={onPaste}
+            />
+            <input {...getInputProps()} />
+          </div>
         </div>
       </div>
+
       {!!attachments.length && (
         <AttachmentPreviews
           attachments={attachments}

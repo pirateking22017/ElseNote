@@ -62,6 +62,20 @@ export default function Post({ post }: PostProps) {
       <Linkify>
         <div className="whitespace-pre-line break-words">{post.content}</div>
       </Linkify>
+      {/* Tags Section */}
+      {post.tags && post.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2">
+          {post.tags.map((tag) => (
+            <Link
+              key={tag.id}
+              href={`/tags/${tag.id}`}
+              className="text-sm text-blue-500 hover:underline"
+            >
+              #{tag.name}
+            </Link>
+          ))}
+        </div>
+      )}
       {!!post.attachments.length && (
         <MediaPreviews attachments={post.attachments} />
       )}

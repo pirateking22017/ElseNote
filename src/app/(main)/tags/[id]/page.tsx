@@ -1,3 +1,5 @@
+// app/(main)/tags/[id]/page.tsx
+
 import { validateRequest } from "@/auth";
 import FollowButton from "@/components/FollowButton";
 import Linkify from "@/components/Linkify";
@@ -13,38 +15,41 @@ import { notFound } from "next/navigation";
 import { cache, Suspense } from "react";
 
 interface PageProps {
-  params: { postId: string };
+  params: { id: string }; // Changed to 'id' for consistency with route
 }
 
-const getPost = cache(async (postId: string, loggedInUserId: string) => {
-  const post = await prisma.post.findUnique({
+const getTagData = cache(async (tagId: string, loggedInUserId: string) => {
+  const tag = await prisma.tag.findUnique({
     where: {
-      id: postId,
+      id: tagId,
     },
-    include: getPostDataInclude(loggedInUserId),
-    
+    include: {
+      posts: {
+        include: getPostDataInclude(loggedInUserId), // Assuming this includes the necessary post data
+      },
+    },
   });
 
-  if (!post) notFound();
+  if (!tag) notFound();
 
-  return post;
+  return tag;
 });
 
 export async function generateMetadata({
-  params: { postId },
+  params: { id }, // Changed to 'id'
 }: PageProps): Promise<Metadata> {
   const { user } = await validateRequest();
 
   if (!user) return {};
 
-  const post = await getPost(postId, user.id);
+  const tag = await getTagData(id, user.id); // Changed to 'id'
 
   return {
-    title: `${post.user.displayName}: ${post.content.slice(0, 50)}...`,
+    title: `Posts for Tag: ${tag.name}`,
   };
 }
 
-export default async function Page({ params: { postId } }: PageProps) {
+export default async function Page({ params: { id } }: PageProps) { // Changed to 'id'
   const { user } = await validateRequest();
 
   if (!user) {
@@ -55,17 +60,23 @@ export default async function Page({ params: { postId } }: PageProps) {
     );
   }
 
-  const post = await getPost(postId, user.id);
+  const tag = await getTagData(id, user.id); // Changed to 'id'
 
   return (
     <main className="flex w-full min-w-0 gap-5">
       <div className="w-full min-w-0 space-y-5">
-        <Post post={post} />
-        
+        <h1 className="text-2xl font-bold">Posts for Tag: {tag.name}</h1>
+        {tag.posts.length > 0 ? (
+          tag.posts.map((post) => (
+            <Post key={post.id} post={post} />
+          ))
+        ) : (
+          <p>No posts found for this tag.</p>
+        )}
       </div>
       <div className="sticky top-[5.25rem] hidden h-fit w-80 flex-none lg:block">
         <Suspense fallback={<Loader2 className="mx-auto animate-spin" />}>
-          <UserInfoSidebar user={post.user} />
+          
         </Suspense>
       </div>
     </main>
